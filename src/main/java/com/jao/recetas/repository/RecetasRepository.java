@@ -1,8 +1,12 @@
 package com.jao.recetas.repository;
 
 import com.jao.recetas.dto.RecetaResponse;
+import com.jao.recetas.dto.RecetasPage;
 import com.jao.recetas.model.Recetas;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Query;
@@ -40,17 +44,16 @@ public interface RecetasRepository extends JpaRepository <Recetas, Integer> {
                         ORDER BY r.titulo ASC
                     """
     )
-    List<RecetaResponse> findAllOrderByTituloAsc();
+    List<RecetaResponse> findAllOrderByTituloAsc(Sort sort);
 
     @Query(
             """
                     SELECT new com.jao.recetas.dto.RecetaResponse( r.id, r.categoriaId, r.titulo, r.descripcion, r.tiempoPreparacionMinutos,  r.porciones)
                         FROM Recetas r
                         WHERE UPPER(r.titulo) LIKE UPPER(CONCAT('%', :infix, '%'))
-                        ORDER BY r.titulo ASC
                     """
     )
-    List<RecetaResponse> findByNombreContainingIgnoreCaseOrderByTituloAsc(@Param("infix") String infix);
+    List<RecetaResponse> findByNombreContainingIgnoreCaseOrderByTituloAsc(@Param("infix") String infix, Sort sort);
 
     @Query(
             """
@@ -61,6 +64,14 @@ public interface RecetasRepository extends JpaRepository <Recetas, Integer> {
                     """
     )
     List<RecetaResponse> findByCategoriaIdOrderByTituloAsc(@Param("categoriaId") Integer categoriaId);
+
+    @Query(
+            """
+                    SELECT new com.jao.recetas.dto.RecetaResponse(r.id, r.categoriaId, r.titulo, r.descripcion, r.tiempoPreparacionMinutos,  r.porciones)
+                        FROM Recetas r
+                    """
+    )
+    Page<RecetaResponse> findAllRecetasOrderByTituloAsc(Pageable pageable);
 
     long countByCategoriaId(Integer categoriaId);
 

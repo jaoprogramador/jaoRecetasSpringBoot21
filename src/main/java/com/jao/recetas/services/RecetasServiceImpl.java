@@ -1,14 +1,16 @@
 package com.jao.recetas.services;
 
-import com.jao.recetas.dto.CategoriaResponse;
-import com.jao.recetas.dto.RecetaRequest;
-import com.jao.recetas.dto.RecetaResponse;
+import com.jao.recetas.dto.*;
 import com.jao.recetas.model.Recetas;
 import com.jao.recetas.repository.RecetasRepository;
 import com.jao.recetas.util.exception.InvalidOperationException;
 import com.jao.recetas.util.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -33,17 +35,37 @@ public class RecetasServiceImpl implements RecetasService{
 
     @Override
     public List<RecetaResponse> findAllOrderByTituloAsc() {
-        return this.recetasRepository.findAllOrderByTituloAsc();
+        Sort.Order order1 = Sort.Order.by("titulo")
+                .with(Sort.Direction.ASC)
+                .ignoreCase();
+        Sort.Order order2 = Sort.Order.by("porciones")
+                .with(Sort.Direction.ASC);
+        Sort sort = Sort.by(List.of(order1, order2));
+
+        return this.recetasRepository.findAllOrderByTituloAsc(sort);
     }
 
     @Override
     public List<RecetaResponse> findByNombreContainingIgnoreCaseOrderByTituloAsc(String infix) {
-        return this.recetasRepository.findByNombreContainingIgnoreCaseOrderByTituloAsc(infix);
+        Sort.Order order = Sort.Order.by("titulo")
+                .with(Sort.Direction.ASC)
+                .ignoreCase();
+        Sort sort = Sort.by(order);
+        return this.recetasRepository.findByNombreContainingIgnoreCaseOrderByTituloAsc(infix,sort);
     }
 
     @Override
     public List<RecetaResponse> findByCategoriaIdOrderByTituloAsc(Integer categoriaId) {
         return this.recetasRepository.findByCategoriaIdOrderByTituloAsc(categoriaId);
+    }
+
+    @Override
+    public RecetasPage findAllRecetasPage(int pageNumber, int pageSize, String sortField, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortField).ascending() : Sort.by(sortField).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<RecetaResponse> pagina = this.recetasRepository.findAllRecetasOrderByTituloAsc(pageable);
+        return new RecetasPage(pagina.getContent(), pageNumber, pageSize, pagina.getTotalPages(), pagina.getTotalElements(),pagina.isLast());
     }
 
     @Override

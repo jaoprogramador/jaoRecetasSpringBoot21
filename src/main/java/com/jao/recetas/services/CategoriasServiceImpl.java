@@ -1,5 +1,6 @@
 package com.jao.recetas.services;
 
+import com.jao.recetas.dto.CategoriaPage;
 import com.jao.recetas.dto.CategoriaRequest;
 import com.jao.recetas.dto.CategoriaResponse;
 import com.jao.recetas.model.Categoria;
@@ -9,6 +10,10 @@ import com.jao.recetas.util.exception.ResourceNotFoundException;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,14 +34,30 @@ public class CategoriasServiceImpl implements CategoriasService{
         return this.categoriasRepository.findOneByNombre(nombre);
     }
 
+
+
     @Override
     public List<CategoriaResponse> findAllOrderByNombreAsc() {
-        return this.categoriasRepository.findAllOrderByNombreAsc();
+        Sort sort = Sort.by("nombre").ascending();
+        return this.categoriasRepository.findAllOrderByNombreAsc(sort);
     }
 
     @Override
     public List<CategoriaResponse> findByNombreContainingIgnoreCaseOrderByNombreAsc(String infix) {
-        return this.categoriasRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(infix);
+        Sort.Order order = Sort.Order.by("nombre")
+                .with(Sort.Direction.ASC)
+                .ignoreCase();
+        Sort sort = Sort.by(order);
+        return this.categoriasRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(infix,sort);
+    }
+
+    @Override
+    public CategoriaPage findAllCategoriasPage(int pageNumber, int pageSize, String sortField, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortField).ascending() : Sort.by(sortField).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<CategoriaResponse> pagina = this.categoriasRepository.findAllCategoriasPage(pageable);
+        return new CategoriaPage(pagina.getContent(), pageNumber, pageSize, pagina.getTotalPages(), pagina.getTotalElements(),pagina.isLast());
     }
 
     @Override

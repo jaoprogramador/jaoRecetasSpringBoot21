@@ -1,7 +1,9 @@
 package com.jao.recetas.controller;
 
+import com.jao.recetas.dto.CategoriaPage;
 import com.jao.recetas.dto.RecetaRequest;
 import com.jao.recetas.dto.RecetaResponse;
+import com.jao.recetas.dto.RecetasPage;
 import com.jao.recetas.model.Recetas;
 import com.jao.recetas.services.RecetasService;
 import com.jao.recetas.util.exception.InvalidDataException;
@@ -44,7 +46,7 @@ public class RecetasController {
         return ResponseEntity.ok(recetas.get()) ;
     }
 
-    @GetMapping("/{infix}")
+    @GetMapping("/search/{infix}")
     public ResponseEntity<?> findByTituloContaining(@PathVariable String infix) {
         List<RecetaResponse> recetas = this.recetasService.findByNombreContainingIgnoreCaseOrderByTituloAsc(infix);
         if (recetas.isEmpty()) {
@@ -52,6 +54,21 @@ public class RecetasController {
         }
 
         return ResponseEntity.ok(recetas);
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<?> findRecetasPage(
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") int pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize,
+            @RequestParam(name = "sortField", required = false, defaultValue = "titulo") String sortField,
+            @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir) {
+
+        RecetasPage recetasPage = this.recetasService.findAllRecetasPage(pageNumber, pageSize, sortField, sortDir);
+        if (recetasPage.getRecetas().isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(recetasPage);
     }
 
     @PostMapping()

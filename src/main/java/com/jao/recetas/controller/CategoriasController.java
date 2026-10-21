@@ -1,5 +1,6 @@
 package com.jao.recetas.controller;
 
+import com.jao.recetas.dto.CategoriaPage;
 import com.jao.recetas.dto.CategoriaRequest;
 import com.jao.recetas.dto.CategoriaResponse;
 import com.jao.recetas.services.CategoriasService;
@@ -47,6 +48,20 @@ public class CategoriasController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(categorias);
+    }
+    @GetMapping("/page")
+    public ResponseEntity<?> findCategoriaPage(
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") int pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize,
+            @RequestParam(name = "sortField", required = false, defaultValue = "nombre") String sortField,
+            @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir) {
+
+        CategoriaPage categoriaPage = this.categoriaService.findAllCategoriasPage(pageNumber, pageSize, sortField, sortDir);
+        if (categoriaPage.getCategorias().isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(categoriaPage);
     }
 
     @GetMapping("/{infix}")
